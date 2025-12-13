@@ -64,6 +64,8 @@ jobs:
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            VITE_ASSET_VERSION=${{ github.sha }}
           # Ubuntu deployment target (amd64 only).
           platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}

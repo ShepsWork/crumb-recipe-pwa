@@ -10,6 +10,9 @@ RUN --mount=type=cache,target=/root/.npm \
 FROM node:20-alpine AS builder
 
 WORKDIR /app
+ARG VITE_ASSET_VERSION
+ENV VITE_ASSET_VERSION=$VITE_ASSET_VERSION
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
