@@ -1,6 +1,6 @@
 # Deploy `crumb.yancmo.xyz` on `ubuntumac` (Traefik + Cloudflare Tunnel)
 
-This repo builds a single container that serves:
+This repo builds a  single container that serves:
 - the built frontend from `dist/`
 - the Express API under `/api/*`
 - a health endpoint at `/health`
