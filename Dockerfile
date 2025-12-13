@@ -3,7 +3,8 @@ FROM node:20-alpine AS deps
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+  npm ci --no-audit --no-fund
 
 ### Build frontend
 FROM node:20-alpine AS builder
@@ -23,7 +24,12 @@ ENV NODE_ENV=production
 ENV PORT=5554
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+COPY --from=deps /app/node_modules ./node_modules
+
+# Avoid a second full install: prune dev deps from the build-time node_modules.
+# This is typically faster and benefits from Docker layer caching.
+RUN --mount=type=cache,target=/root/.npm \
+  npm prune --omit=dev --no-audit --no-fund
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server

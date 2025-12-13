@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Maskable icon variant.
+    Full-bleed background; artwork kept within safe padding so iOS/Android masks don't crop the bread.
+  -->
+
+  <!-- Full-bleed background -->
+  <rect x="0" y="0" width="512" height="512" fill="#7C8FB2"/>
+
+  <!-- Bread slice (slightly smaller + centered) -->
+  <path d="M182 176c0-28 23-50 50-50h48c28 0 50 22 50 50v21c0 13 5 25 13 34 11 13 18 30 18 48v73c0 20-16 36-36 36H197c-20 0-36-16-36-36v-73c0-18 7-35 18-48 8-9 13-21 13-34v-21Z" fill="#F1D8A4"/>
+  <path d="M196 182c0-20 16-36 36-36h44c20 0 36 16 36 36v13c0 11 4 21 10 30 9 12 14 26 14 42v81c0 12-10 22-22 22H206c-12 0-22-10-22-22v-81c0-16 5-30 14-42 7-9 10-19 10-30v-13Z" fill="#F7E4BF" opacity="0.9"/>
+
+  <!-- Swirl -->
+  <path d="M210 330c0-26 20-46 46-46h29c15 0 27-12 27-27 0-13-11-24-24-24h-56c-11 0-20 9-20 20 0 9 8 17 17 17h44" stroke="#B77B4E" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+
+  <!-- Crumbs -->
+  <circle cx="168" cy="372" r="7" fill="#F1D8A4" opacity="0.95"/>
+  <circle cx="148" cy="350" r="5" fill="#F1D8A4" opacity="0.9"/>
+  <circle cx="164" cy="334" r="4" fill="#F1D8A4" opacity="0.85"/>
+
+  <!-- Sparkle -->
+  <path d="M388 356l7 16 16 7-16 7-7 16-7-16-16-7 16-7 7-16Z" fill="#FFFFFF" opacity="0.55"/>
+</svg>
