@@ -28,6 +28,15 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// API health endpoint (used by frontend availability checks)
+app.head('/api/health', (req, res) => {
+  res.status(200).end();
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Recipe import endpoint
 app.post('/api/import', async (req, res) => {
   try {

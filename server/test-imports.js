@@ -14,6 +14,12 @@ const testUrls = [
     expectedPlugin: 'WPRM'
   },
 
+  // WPRM with instruction groups + sub-step labels (e.g., "Levain", "Mix:")
+  {
+    url: 'https://amybakesbread.com/cinnamon-roll-sourdough-focaccia/#wprm-recipe-container-30217',
+    name: 'Amy Bakes Bread - WPRM instruction groups'
+  },
+
   // Cooked plugin (regular + print)
   {
     url: 'https://thebakingnetwork.com/recipes/pumpkin-sourdough-drop-donuts/',
