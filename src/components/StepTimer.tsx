@@ -18,7 +18,7 @@ function useCountdownTimer(initialSeconds: number, onComplete?: () => void) {
   onCompleteRef.current = onComplete;
 
   useEffect(() => {
-    // If initialSeconds changes (rare, but possible), reset to match.
+    // If initialSeconds changes, reset to match.
     setState({ isRunning: false, remainingSeconds: Math.max(1, Math.round(initialSeconds)) });
   }, [initialSeconds]);
 
@@ -28,7 +28,6 @@ function useCountdownTimer(initialSeconds: number, onComplete?: () => void) {
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((state.endAtMs! - Date.now()) / 1000));
       setState((prev) => {
-        // If we were paused/reset between scheduling and running, don't clobber.
         if (!prev.isRunning || !prev.endAtMs) return prev;
         return { ...prev, remainingSeconds: remaining };
       });
@@ -39,7 +38,6 @@ function useCountdownTimer(initialSeconds: number, onComplete?: () => void) {
       }
     };
 
-    // Initial tick (fast UI response), then every second.
     tick();
     const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);

@@ -150,6 +150,27 @@ export function formatDurationShort(totalSeconds: number): string {
   return parts.join(' ');
 }
 
+/**
+ * Human label intended for UI chips.
+ * Examples: "30 min", "2 hr 30 min", "45 sec", "200 min".
+ */
+export function formatDurationHuman(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+
+  if (s < 60) {
+    return `${s} sec`;
+  }
+
+  const totalMinutes = Math.max(0, Math.round(s / 60));
+  if (totalMinutes < 60) {
+    return `${totalMinutes} min`;
+  }
+
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return m > 0 ? `${h} hr ${m} min` : `${h} hr`;
+}
+
 export function formatDurationClock(totalSeconds: number): string {
   const s = Math.max(0, Math.floor(totalSeconds));
   const h = Math.floor(s / 3600);
@@ -163,5 +184,65 @@ export function formatDurationClock(totalSeconds: number): string {
     return `${h}:${mm}:${ss}`;
   }
 
-  return `${m}:${ss.padStart(2, '0')}`;
+  return `${m}:${ss}`;
+}
+
+export function formatSecondsAsEditableValue(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const totalMinutes = Math.max(0, Math.round(s / 60));
+
+  // Default: show minutes for short timers, and H:MM for longer ones.
+  if (totalMinutes < 60) return String(totalMinutes || 0);
+
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h}:${String(m).padStart(2, '0')}`;
+}
+
+export type ParseEditableDurationResult =
+  | { ok: true; seconds: number }
+  | { ok: false; reason: 'empty' | 'invalid' | 'zero' };
+
+/**
+ * Parses editable duration input.
+ *
+ * Rules:
+ * - If value contains ":", interpret as H:MM (hours:minutes).
+ * - Otherwise interpret as total minutes.
+ *
+ * Examples:
+ * - "2:30" => 2 hours 30 min
+ * - "200" => 200 minutes
+ */
+export function parseEditableDurationToSeconds(value: string): ParseEditableDurationResult {
+  const raw = String(value ?? '').trim();
+  if (!raw) return { ok: false, reason: 'empty' };
+
+  // Allow users to type spaces; we strip them.
+  const cleaned = raw.replace(/\s+/g, '');
+
+  if (cleaned.includes(':')) {
+    // Only keep digits + ':'; drop anything else defensively.
+    const safe = cleaned.replace(/[^0-9:]/g, '');
+    const [hStr, mStr = ''] = safe.split(':');
+    if (hStr.length === 0 && mStr.length === 0) return { ok: false, reason: 'invalid' };
+
+    const h = hStr.length ? Number.parseInt(hStr, 10) : 0;
+    const m = mStr.length ? Number.parseInt(mStr, 10) : 0;
+
+    if (!Number.isFinite(h) || !Number.isFinite(m) || h < 0 || m < 0) return { ok: false, reason: 'invalid' };
+
+    const totalMinutes = h * 60 + m;
+    if (totalMinutes <= 0) return { ok: false, reason: 'zero' };
+
+    return { ok: true, seconds: totalMinutes * 60 };
+  }
+
+  // Minutes mode: keep digits only.
+  const digits = cleaned.replace(/\D/g, '');
+  if (!digits) return { ok: false, reason: 'invalid' };
+  const minutes = Number.parseInt(digits, 10);
+  if (!Number.isFinite(minutes) || minutes <= 0) return { ok: false, reason: 'zero' };
+
+  return { ok: true, seconds: minutes * 60 };
 }

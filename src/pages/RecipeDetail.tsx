@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { useRecipeStore, useCookSession, useSettings } from '../state/session';
 import { scaleIngredients, formatFraction, getMultiplierOptions, getIngredientDisplayAmount } from '../utils/scale';
 import { isConvertibleToGrams } from '../utils/conversions';
-import { StepTimers } from '../components/StepTimer';
+import { FloatingStepTimer } from '../components/FloatingStepTimer';
 import type { Recipe } from '../types';
 
 export default function RecipeDetail() {
@@ -46,6 +46,21 @@ export default function RecipeDetail() {
 
   const isStepGroupHeader = (step: string) => /^\*\*[^*]+:\*\*$/.test(step.trim());
   const formatStepGroupHeader = (step: string) => step.replace(/\*\*/g, '').replace(/:\s*$/, '').trim();
+
+  const currentStepIndex = useMemo(() => {
+    if (!recipe) return 0;
+    const checked = currentSession?.checkedSteps || {};
+    for (let i = 0; i < recipe.steps.length; i += 1) {
+      const s = recipe.steps[i];
+      if (isStepGroupHeader(s)) continue;
+      if (!checked[i]) return i;
+    }
+    // If all are checked, fall back to the last non-header step.
+    for (let i = recipe.steps.length - 1; i >= 0; i -= 1) {
+      if (!isStepGroupHeader(recipe.steps[i])) return i;
+    }
+    return 0;
+  }, [recipe, currentSession?.checkedSteps]);
 
   useEffect(() => {
     if (id) {
@@ -696,10 +711,6 @@ export default function RecipeDetail() {
                       <p className={`text-gray-900 ${currentSession?.checkedSteps[index] ? 'line-through opacity-60' : ''}`}>
                         {step}
                       </p>
-                      <StepTimers
-                        stepText={step}
-                        onTimerComplete={(label) => toast.success(`Timer done${label ? ` (${label})` : ''}`)}
-                      />
                     </div>
                   </div>
                 );
@@ -707,6 +718,14 @@ export default function RecipeDetail() {
             </div>
           </section>
         </div>
+
+        <FloatingStepTimer
+          recipeTitle={recipe.title}
+          stepIndex={currentStepIndex}
+          stepText={recipe.steps[currentStepIndex] || ''}
+          enabled={!!currentSession}
+          onTimerComplete={(seconds) => toast.success(`Timer done (${Math.round(seconds / 60)} min)`)}
+        />
 
         {/* Tips */}
         {recipe.tips && recipe.tips.length > 0 && (
