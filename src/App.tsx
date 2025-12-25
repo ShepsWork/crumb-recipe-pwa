@@ -108,6 +108,16 @@ function App() {
       </Routes>
       <Toaster 
         position="top-center"
+        // iOS safe area (Dynamic Island / notch): keep toasts out of the status bar region.
+        // On non-iOS browsers, env(safe-area-inset-*) resolves to 0px.
+        offset={{
+          top: 'calc(env(safe-area-inset-top) + 12px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 12px)'
+        }}
+        mobileOffset={{
+          top: 'calc(env(safe-area-inset-top) + 12px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 12px)'
+        }}
         toastOptions={{
           style: {
             background: 'hsl(var(--card))',
