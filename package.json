@@ -21,7 +21,6 @@
     "@capacitor/ios": "^8.0.0",
     "@capacitor/local-notifications": "^8.0.0",
     "@mozilla/readability": "^0.4.4",
-    "capacitor-live-activities": "^7.1.2",
     "cheerio": "^1.0.0-rc.12",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",

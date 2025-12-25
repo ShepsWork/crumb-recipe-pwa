@@ -60,6 +60,42 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* iOS-ish UI primitives (kept light so the web still looks good) */
+.ios-page {
+  /* iOS grouped background (systemGroupedBackground-ish) */
+  background: rgb(242 242 247);
+}
+
+.ios-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+}
+
+.ios-nav {
+  background: rgba(255, 255, 255, 0.78);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.ios-nav-title {
+  letter-spacing: -0.01em;
+}
+
+.dark .ios-page {
+  background: rgb(0 0 0);
+}
+
+.dark .ios-card {
+  background: rgba(28, 28, 30, 0.92);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dark .ios-nav {
+  background: rgba(28, 28, 30, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 /* Print styles */
 @media print {
   .no-print {
@@ -99,6 +135,22 @@ body {
 
 /* iOS Safari specific */
 @supports (-webkit-touch-callout: none) {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
   .ios-padding {
     padding-bottom: env(safe-area-inset-bottom);
   }

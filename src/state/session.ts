@@ -278,6 +278,14 @@ interface SettingsStore {
   syncKey: string;
 
   /**
+   * Optional API base URL for native/mobile builds.
+   * Example: https://your-domain.com/api
+   *
+   * When empty, web builds default to same-origin /api.
+   */
+  apiBaseUrl: string;
+
+  /**
    * User overrides for ingredient/unit → grams.
    * Example:
    * {
@@ -292,6 +300,7 @@ interface SettingsStore {
   setAutoExtendSessions: (auto: boolean) => void;
   setPreferGrams: (prefer: boolean) => void;
   setSyncKey: (key: string) => void;
+  setApiBaseUrl: (url: string) => void;
   upsertConversionOverride: (ingredientKey: string, unit: string, gramsPerUnit: number) => void;
   removeConversionOverride: (ingredientKey: string, unit: string) => void;
 }
@@ -309,6 +318,7 @@ export const useSettings = create<SettingsStore>()(
       preferGrams: true,
 
       syncKey: '',
+      apiBaseUrl: '',
       conversionOverrides: {},
 
       setTheme: (theme) => set({ theme }),
@@ -316,6 +326,7 @@ export const useSettings = create<SettingsStore>()(
       setAutoExtendSessions: (autoExtendSessions) => set({ autoExtendSessions }),
       setPreferGrams: (preferGrams) => set({ preferGrams }),
       setSyncKey: (syncKey) => set({ syncKey: (syncKey || '').trim() }),
+      setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl: (apiBaseUrl || '').trim() }),
       upsertConversionOverride: (ingredientKey, unit, gramsPerUnit) => {
         const key = (ingredientKey || '').trim().toLowerCase();
         const u = (unit || '').trim().toLowerCase();

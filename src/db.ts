@@ -45,6 +45,15 @@ export class CrumbDB extends Dexie {
       console.warn('⚠ Server unavailable - using offline cache');
     }
   }
+
+  private formatErrorForLog(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    try {
+      return typeof error === 'string' ? error : JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
   
   /**
    * Get all recipes - server first, cache fallback
@@ -59,7 +68,7 @@ export class CrumbDB extends Dexie {
       
       return serverRecipes;
     } catch (error) {
-      console.warn('Using cached recipes:', error);
+      console.warn('Using cached recipes:', this.formatErrorForLog(error));
       // Fallback to IndexedDB cache
       return this.recipes.toArray();
     }
@@ -79,7 +88,7 @@ export class CrumbDB extends Dexie {
       
       return recipe || undefined;
     } catch (error) {
-      console.warn(`Using cached recipe ${id}:`, error);
+      console.warn(`Using cached recipe ${id}:`, this.formatErrorForLog(error));
       return this.recipes.get(id);
     }
   }
@@ -97,7 +106,7 @@ export class CrumbDB extends Dexie {
       
       return saved;
     } catch (error) {
-      console.warn('Server save failed, caching locally:', error);
+      console.warn('Server save failed, caching locally:', this.formatErrorForLog(error));
       // Save to cache only
       await this.recipes.put(recipe);
       return recipe;
@@ -117,7 +126,7 @@ export class CrumbDB extends Dexie {
       
       return updated;
     } catch (error) {
-      console.warn('Server update failed, updating cache:', error);
+      console.warn('Server update failed, updating cache:', this.formatErrorForLog(error));
       // Update cache only
       const existing = await this.recipes.get(id);
       if (existing) {
@@ -140,7 +149,7 @@ export class CrumbDB extends Dexie {
       // Delete from cache
       await this.recipes.delete(id);
     } catch (error) {
-      console.warn('Server delete failed, removing from cache:', error);
+      console.warn('Server delete failed, removing from cache:', this.formatErrorForLog(error));
       // Delete from cache anyway
       await this.recipes.delete(id);
     }
