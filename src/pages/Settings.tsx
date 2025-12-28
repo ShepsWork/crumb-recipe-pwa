@@ -4,6 +4,9 @@ import { ArrowLeft, Download, Upload, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSettings, useRecipeStore } from '../state/session';
 import { db } from '../db';
+import { IosNavBar } from '../components/IosNavBar';
+import { endTimerLiveActivity, startTimerLiveActivity } from '../utils/liveActivities';
+import { isNativePlatform } from '../utils/nativeLocalNotifications';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -14,6 +17,8 @@ export default function Settings() {
     setKeepSessionsOnClose,
     syncKey,
     setSyncKey,
+    apiBaseUrl,
+    setApiBaseUrl,
     preferGrams,
     setPreferGrams,
     conversionOverrides,
@@ -24,6 +29,8 @@ export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isClearingData, setIsClearingData] = useState(false);
+  const [isTestingLiveActivity, setIsTestingLiveActivity] = useState(false);
+  const [testLiveActivityId, setTestLiveActivityId] = useState<string | null>(null);
 
   const [overrideIngredientKey, setOverrideIngredientKey] = useState('');
   const [overrideUnit, setOverrideUnit] = useState('');
@@ -123,26 +130,104 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-oatmeal">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate('/')}
-              className="text-gray-600 hover:text-gray-900"
-              aria-label="Back to library"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen ios-page">
+      <IosNavBar
+        title="Settings"
+        left={
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-1 text-blueberry font-medium"
+            aria-label="Back to library"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-[17px]">Library</span>
+          </button>
+        }
+      />
 
-  <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-5 space-y-5">
+        {/* Live Activities (iOS) */}
+        {isNativePlatform() && (
+          <div className="ios-card p-5">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Live Activities</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Use this to verify the Lock Screen + Dynamic Island timer UI.
+              If nothing shows, check iOS Settings → <span className="font-semibold">Crumb</span> → <span className="font-semibold">Live Activities</span>.
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={isTestingLiveActivity}
+                onClick={async () => {
+                  setIsTestingLiveActivity(true);
+                  try {
+                    if (testLiveActivityId) {
+                      await endTimerLiveActivity(testLiveActivityId);
+                      setTestLiveActivityId(null);
+                    }
+
+                    const endAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+                    const activityId = await startTimerLiveActivity({
+                      recipeTitle: 'Live Activity Test',
+                      stepIndex: 0,
+                      stepText: 'If you see this in the Dynamic Island, we’re cooking.',
+                      endTimeMs: endAt,
+                      widgetUrl: 'crumb://timer?test=1'
+                    });
+
+                    setTestLiveActivityId(activityId);
+
+                    if (activityId) {
+                      toast.success('Live Activity started');
+                    } else {
+                      toast.error('Live Activity not started (not supported or disabled)');
+                    }
+                  } catch (e) {
+                    console.error('Live Activity test failed:', e);
+                    toast.error('Failed to start Live Activity');
+                  } finally {
+                    setIsTestingLiveActivity(false);
+                  }
+                }}
+                className="px-4 py-2 bg-blueberry text-white rounded-lg hover:bg-blueberry/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Start test Live Activity
+              </button>
+
+              <button
+                type="button"
+                disabled={!testLiveActivityId || isTestingLiveActivity}
+                onClick={async () => {
+                  if (!testLiveActivityId) return;
+                  setIsTestingLiveActivity(true);
+                  try {
+                    await endTimerLiveActivity(testLiveActivityId);
+                    setTestLiveActivityId(null);
+                    toast.success('Live Activity ended');
+                  } catch (e) {
+                    console.error('End Live Activity failed:', e);
+                    toast.error('Failed to end Live Activity');
+                  } finally {
+                    setIsTestingLiveActivity(false);
+                  }
+                }}
+                className="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                End test Live Activity
+              </button>
+            </div>
+
+            {testLiveActivityId && (
+              <p className="mt-3 text-xs text-gray-500">
+                Current activity id: <span className="font-mono">{testLiveActivityId}</span>
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Theme Settings */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Appearance</h2>
           
           <div className="space-y-3">
@@ -162,7 +247,7 @@ export default function Settings() {
         </div>
 
         {/* Measurement Settings */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Measurements</h2>
 
           <div className="space-y-4">
@@ -182,7 +267,7 @@ export default function Settings() {
         </div>
 
         {/* Sync Settings */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Sync</h2>
           <p className="text-sm text-gray-500 mb-4">
             Use the same sync key on multiple devices to share the same recipe library (no account required).
@@ -197,10 +282,31 @@ export default function Settings() {
               className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blueberry focus:border-transparent"
             />
           </label>
+
+          <div className="mt-4">
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Server URL (API base)</span>
+              <input
+                value={apiBaseUrl}
+                onChange={(e) => setApiBaseUrl(e.target.value)}
+                placeholder="https://your-domain.com/api"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blueberry focus:border-transparent"
+              />
+            </label>
+            <p className="mt-2 text-sm text-gray-500">
+              Native iOS builds can’t call <span className="font-mono">/api</span> on the bundled app.
+              Set this to your deployed server’s API (ends with <span className="font-mono">/api</span>).
+              For the iOS Simulator, <span className="font-mono">http://localhost:3000/api</span> often works.
+            </p>
+          </div>
         </div>
 
         {/* Conversion Overrides */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Conversion Overrides</h2>
           <p className="text-sm text-gray-500 mb-4">
             Add your own ingredient/unit → grams conversions. These are used before built-in conversions.
@@ -280,7 +386,7 @@ export default function Settings() {
         </div>
 
         {/* Session Settings */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Cooking Sessions</h2>
           
           <div className="space-y-4">
@@ -299,28 +405,8 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Measurement Settings */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Measurements</h2>
-
-          <div className="space-y-4">
-            <label className="flex items-center justify-between">
-              <div>
-                <span className="text-gray-700">Prefer grams by default</span>
-                <p className="text-sm text-gray-500">Show weight conversions when available</p>
-              </div>
-              <input
-                type="checkbox"
-                checked={preferGrams}
-                onChange={(e) => setPreferGrams(e.target.checked)}
-                className="w-5 h-5 text-blueberry rounded focus:ring-blueberry"
-              />
-            </label>
-          </div>
-        </div>
-
         {/* Data Management */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Data Management</h2>
           
           <div className="space-y-4">
@@ -404,7 +490,7 @@ export default function Settings() {
         </div>
 
         {/* App Info */}
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+        <div className="ios-card p-5">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">About</h2>
           
           <div className="space-y-2 text-sm text-gray-600">

@@ -7,12 +7,13 @@ import ImportRecipe from './pages/ImportRecipe';
 import RecipeDetail from './pages/RecipeDetail';
 import Settings from './pages/Settings';
 import { registerSW } from 'virtual:pwa-register';
+import { isNativePlatform } from './utils/nativeLocalNotifications';
 
 // Register service worker
 let updateSW: ((reloadPage?: boolean) => Promise<void>) | undefined;
 let updateToastShown = false;
 
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !isNativePlatform()) {
   updateSW = registerSW({
     onNeedRefresh() {
       // Common practice: inform the user and let them choose when to reload.
@@ -108,6 +109,16 @@ function App() {
       </Routes>
       <Toaster 
         position="top-center"
+        // iOS safe area (Dynamic Island / notch): keep toasts out of the status bar region.
+        // On non-iOS browsers, env(safe-area-inset-*) resolves to 0px.
+        offset={{
+          top: 'calc(env(safe-area-inset-top) + 12px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 12px)'
+        }}
+        mobileOffset={{
+          top: 'calc(env(safe-area-inset-top) + 12px)',
+          bottom: 'calc(env(safe-area-inset-bottom) + 12px)'
+        }}
         toastOptions={{
           style: {
             background: 'hsl(var(--card))',

@@ -6,6 +6,7 @@ import { useRecipeStore, useCookSession, useSettings } from '../state/session';
 import { scaleIngredients, formatFraction, getMultiplierOptions, getIngredientDisplayAmount } from '../utils/scale';
 import { isConvertibleToGrams } from '../utils/conversions';
 import { FloatingStepTimer } from '../components/FloatingStepTimer';
+import { IosNavBar } from '../components/IosNavBar';
 import type { Recipe } from '../types';
 
 export default function RecipeDetail() {
@@ -301,30 +302,29 @@ export default function RecipeDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-oatmeal">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 no-print">
-        <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 flex-1 min-w-0">
-              <button
-                onClick={() => navigate('/')}
-                className="text-gray-600 hover:text-gray-900 flex-shrink-0"
-                aria-label="Back to library"
-              >
-                <ArrowLeft className="h-6 w-6" />
-              </button>
-              <h1 className="text-xl font-semibold text-gray-900 truncate">
-                {recipe.title}
-              </h1>
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
+    <div className="min-h-screen ios-page">
+      <IosNavBar
+        className="no-print"
+        title={recipe?.title || 'Recipe'}
+        left={
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-1 text-blueberry font-medium"
+            aria-label="Back to library"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-[17px]">Library</span>
+          </button>
+        }
+        right={
+          recipe ? (
+            <div className="flex items-center gap-1 -mr-2">
               <button
                 onClick={handleToggleFavorite}
                 className={
                   recipe.isFavorite
                     ? 'text-yellow-500 hover:text-yellow-600 p-2'
-                    : 'text-gray-400 hover:text-gray-700 p-2'
+                    : 'text-gray-500 hover:text-gray-800 p-2'
                 }
                 title={recipe.isFavorite ? 'Unfavorite' : 'Favorite'}
                 aria-label={recipe.isFavorite ? 'Unfavorite recipe' : 'Favorite recipe'}
@@ -333,16 +333,16 @@ export default function RecipeDetail() {
               </button>
               <button
                 onClick={handleDelete}
-                className="text-gray-400 hover:text-red-500 p-2 -mr-2"
+                className="text-gray-500 hover:text-red-600 p-2"
                 title="Delete recipe"
                 aria-label="Delete recipe"
               >
                 <Trash2 className="h-5 w-5" />
               </button>
             </div>
-          </div>
-        </div>
-      </header>
+          ) : null
+        }
+      />
 
       {/* Session Status */}
       {currentSession && timeRemaining > 0 && (
@@ -361,9 +361,9 @@ export default function RecipeDetail() {
         </div>
       )}
 
-      <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 py-6 space-y-6">
+      <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 py-5 space-y-5">
         {/* Recipe Info */}
-        <div className="bg-white rounded-lg p-6 shadow-sm recipe-content">
+        <div className="ios-card p-5 recipe-content">
           {/* Recipe Image with Upload Option */}
           <div className="relative mb-4">
             {recipe.image ? (
@@ -491,7 +491,7 @@ export default function RecipeDetail() {
         </div>
 
         {/* Scale Control */}
-        <div className="bg-white rounded-lg p-4 shadow-sm no-print">
+        <div className="ios-card p-4 no-print">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Scale Recipe</h3>
             {hasConvertibleIngredients && (
@@ -511,14 +511,15 @@ export default function RecipeDetail() {
           </div>
           
           <div className="space-y-3">
-            <div>
-              <label htmlFor="multiplier-select" className="block text-sm font-medium text-gray-700 mb-1">
-                Recipe Size
-              </label>
+            <div
+              className="ios-card p-5 recipe-content md:sticky md:top-6 md:max-h-[calc(100vh-8rem)] md:overflow-auto"
+              aria-label="Ingredients"
+            >
               <select
                 id="multiplier-select"
                 value={multiplier.toString()}
                 onChange={(e) => handleMultiplierChange(e.target.value)}
+                aria-label="Scale multiplier"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blueberry focus:border-transparent bg-white text-gray-900"
               >
                 {getMultiplierOptions().map(({ value, label }) => (
@@ -670,7 +671,7 @@ export default function RecipeDetail() {
           </section>
 
           {/* Instructions */}
-          <section className="bg-white rounded-lg p-6 shadow-sm recipe-content" aria-label="Instructions">
+          <section className="ios-card p-5 recipe-content" aria-label="Instructions">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Instructions</h2>
 
             <div className="space-y-4">
@@ -721,6 +722,7 @@ export default function RecipeDetail() {
 
         <FloatingStepTimer
           recipeTitle={recipe.title}
+          recipeImageUrl={recipe.image}
           stepIndex={currentStepIndex}
           stepText={recipe.steps[currentStepIndex] || ''}
           enabled={!!currentSession}
@@ -729,7 +731,7 @@ export default function RecipeDetail() {
 
         {/* Tips */}
         {recipe.tips && recipe.tips.length > 0 && (
-          <div className="bg-white rounded-lg p-6 shadow-sm recipe-content">
+          <div className="ios-card p-5 recipe-content">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Tips</h2>
             <div className="space-y-2">
               {recipe.tips.map((tip, index) => (
@@ -743,7 +745,7 @@ export default function RecipeDetail() {
 
         {/* Nutrition Information */}
         {recipe.nutrition && (
-          <div className="bg-white rounded-lg p-6 shadow-sm recipe-content">
+          <div className="ios-card p-5 recipe-content">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Nutrition Facts</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {recipe.nutrition.calories !== undefined && (
@@ -805,7 +807,7 @@ export default function RecipeDetail() {
         )}
 
         {/* Personal Notes */}
-        <div className="bg-white rounded-lg p-6 shadow-sm recipe-content">
+        <div className="ios-card p-5 recipe-content">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">My Notes</h2>
             {!isEditingNotes ? (

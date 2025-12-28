@@ -3,9 +3,11 @@ import { useRecipeStore } from '../state/session';
 import { Link } from 'react-router-dom';
 import { Plus, Search, ChefHat, Trash2, Star } from 'lucide-react';
 import { toast } from 'sonner';
+import { IosNavBar } from '../components/IosNavBar';
+import { createSampleRecipe } from '../utils/sampleRecipe';
 
 export default function Library() {
-  const { recipes, searchQuery, searchRecipes, getFilteredRecipes, isLoading, deleteRecipe, updateRecipe } = useRecipeStore();
+  const { recipes, searchQuery, searchRecipes, getFilteredRecipes, isLoading, deleteRecipe, updateRecipe, addRecipe } = useRecipeStore();
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [customCategories, setCustomCategories] = useState<string[]>([]);
@@ -74,44 +76,35 @@ export default function Library() {
   };
 
   return (
-    <div className="min-h-screen bg-oatmeal">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <ChefHat className="h-8 w-8 text-blueberry" />
-              <h1 className="text-2xl font-bold text-gray-900">Crumb</h1>
-            </div>
-            <Link 
-              to="/settings"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              Settings
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen ios-page">
+      <IosNavBar
+        title="Crumb"
+        right={
+          <Link to="/settings" className="text-blueberry font-medium">
+            Settings
+          </Link>
+        }
+      />
 
-      <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-5">
         {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <div className="relative mb-4 ios-card px-3 py-2">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
-            placeholder="Search recipes..."
+            placeholder="Search"
             value={localQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blueberry focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-transparent border-0 focus:ring-0 focus:outline-none text-[17px]"
           />
         </div>
 
         {/* Category filter */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-5 ios-card p-3">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blueberry focus:border-transparent bg-white text-gray-900"
+            className="flex-1 px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blueberry/20 focus:border-blueberry/30 bg-white/80 text-gray-900"
             aria-label="Filter by category"
           >
             <option value="All">All categories</option>
@@ -124,7 +117,7 @@ export default function Library() {
           <button
             type="button"
             onClick={handleAddCategory}
-            className="px-3 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-3 py-3 bg-gray-100/80 text-gray-700 rounded-xl hover:bg-gray-200/80 transition-colors"
             title="Add a new category"
           >
             +
@@ -135,7 +128,7 @@ export default function Library() {
         {isLoading ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg p-4 shadow-sm animate-pulse">
+              <div key={i} className="ios-card p-4 animate-pulse">
                 <div className="flex space-x-4">
                   <div className="w-16 h-16 bg-gray-300 rounded-lg"></div>
                   <div className="flex-1 space-y-2">
@@ -159,13 +152,31 @@ export default function Library() {
               }
             </p>
             {!searchQuery && (
-              <Link
-                to="/import"
-                className="inline-flex items-center px-6 py-3 bg-blueberry text-white rounded-lg hover:bg-blueberry/90 transition-colors"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Import Recipe
-              </Link>
+              <div className="flex flex-col items-center gap-3">
+                <Link
+                  to="/import"
+                  className="inline-flex items-center px-6 py-3 bg-blueberry text-white rounded-lg hover:bg-blueberry/90 transition-colors"
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Import Recipe
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const recipe = createSampleRecipe();
+                      await addRecipe(recipe);
+                      toast.success('Sample recipe added');
+                    } catch {
+                      toast.error('Failed to add sample recipe');
+                    }
+                  }}
+                  className="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Add sample recipe
+                </button>
+              </div>
             )}
           </div>
         ) : (
@@ -173,7 +184,7 @@ export default function Library() {
             {visibleRecipes.map((recipe) => (
               <div
                 key={recipe.id}
-                className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative group"
+                className="ios-card p-4 transition-shadow relative group"
               >
                 <Link
                   to={`/recipe/${recipe.id}`}
@@ -246,7 +257,7 @@ export default function Library() {
         {/* Floating Action Button */}
         <Link
           to="/import"
-          className="fixed bottom-6 right-6 bg-blueberry text-white p-4 rounded-full shadow-lg hover:bg-blueberry/90 transition-colors"
+          className="fixed bg-blueberry text-white p-4 rounded-full shadow-lg hover:bg-blueberry/90 transition-colors bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-[calc(1.5rem+env(safe-area-inset-right))]"
         >
           <Plus className="h-6 w-6" />
         </Link>

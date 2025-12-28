@@ -6,7 +6,34 @@
 import type { Recipe } from '../types';
 import { useSettings } from '../state/session';
 
-const API_BASE = '/api';
+function isNativeShell(): boolean {
+  // Capacitor uses capacitor://localhost
+  // Some setups can be ionic://localhost or file://
+  const proto = (typeof window !== 'undefined' && window.location?.protocol) ? window.location.protocol : '';
+  return proto === 'capacitor:' || proto === 'ionic:' || proto === 'file:';
+}
+
+function getApiBase(): string {
+  // In web builds we normally use the same-origin API (Vite proxies /api in dev).
+  // In native (Capacitor) builds, you may want to point at a remote server.
+  const raw = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
+  const settingsBase = (() => {
+    try {
+      return (useSettings.getState().apiBaseUrl || '').trim();
+    } catch {
+      return '';
+    }
+  })();
+
+  const base = (raw || settingsBase || '/api').trim();
+  return base.endsWith('/') ? base.slice(0, -1) : base;
+}
+
+function apiUrl(path: string): string {
+  const base = getApiBase();
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`;
+}
 
 function getSyncKeyHeader(): Record<string, string> {
   try {
@@ -28,7 +55,14 @@ export interface ApiResponse<T> {
  */
 export async function checkServerHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE}/health`, { 
+    // In native shells, a relative /api base points to capacitor://localhost which is not
+    // a real network API. Treat as unavailable unless user configured an absolute base.
+    if (isNativeShell()) {
+      const base = getApiBase();
+      if (base.startsWith('/')) return false;
+    }
+
+    const response = await fetch(apiUrl('/health'), { 
       method: 'HEAD',
       signal: AbortSignal.timeout(2000) // 2 second timeout
     });
@@ -43,7 +77,7 @@ export async function checkServerHealth(): Promise<boolean> {
  */
 export async function getAllRecipes(): Promise<Recipe[]> {
   try {
-    const response = await fetch(`${API_BASE}/recipes`, {
+    const response = await fetch(apiUrl('/recipes'), {
       headers: {
         ...getSyncKeyHeader()
       }
@@ -71,7 +105,7 @@ export async function getAllRecipes(): Promise<Recipe[]> {
  */
 export async function getRecipe(id: string): Promise<Recipe | null> {
   try {
-    const response = await fetch(`${API_BASE}/recipes/${id}`, {
+    const response = await fetch(apiUrl(`/recipes/${id}`), {
       headers: {
         ...getSyncKeyHeader()
       }
@@ -103,7 +137,7 @@ export async function getRecipe(id: string): Promise<Recipe | null> {
  */
 export async function saveRecipe(recipe: Recipe): Promise<Recipe> {
   try {
-    const response = await fetch(`${API_BASE}/recipes`, {
+    const response = await fetch(apiUrl('/recipes'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +168,7 @@ export async function saveRecipe(recipe: Recipe): Promise<Recipe> {
  */
 export async function updateRecipe(id: string, recipe: Partial<Recipe>): Promise<Recipe> {
   try {
-    const response = await fetch(`${API_BASE}/recipes/${id}`, {
+    const response = await fetch(apiUrl(`/recipes/${id}`), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +199,7 @@ export async function updateRecipe(id: string, recipe: Partial<Recipe>): Promise
  */
 export async function deleteRecipe(id: string): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE}/recipes/${id}`, {
+    const response = await fetch(apiUrl(`/recipes/${id}`), {
       method: 'DELETE',
       headers: {
         ...getSyncKeyHeader()
@@ -192,7 +226,31 @@ export async function deleteRecipe(id: string): Promise<void> {
  */
 export async function importRecipe(url: string, saveToServer = true): Promise<Recipe> {
   try {
-    const response = await fetch(`${API_BASE}/import`, {
+    // In native shells, we must use an absolute http(s) server URL.
+    const base = getApiBase();
+    if (isNativeShell() && base.startsWith('/')) {
+      throw new Error(
+        'Import requires a server URL in native iOS. ' +
+          'Go to Settings → Server URL and set it to your deployed API (e.g., https://your-domain.com/api).'
+      );
+    }
+
+    const requestUrl = apiUrl('/import');
+
+    // Validate URL early to avoid opaque WebKit errors like:
+    // "The string did not match the expected pattern."
+    try {
+      // new URL() requires an absolute base.
+      // In native (Capacitor) this will be capacitor://localhost/...
+      new URL(requestUrl, window.location.href);
+    } catch {
+      throw new Error(
+        `Invalid API base URL. Tried to call: ${requestUrl}. ` +
+          `If you're on iOS/native, set VITE_API_BASE_URL to something like https://your-server.com/api.`
+      );
+    }
+
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -217,7 +275,12 @@ export async function importRecipe(url: string, saveToServer = true): Promise<Re
     
     return data.recipe;
   } catch (error) {
-    console.error('Failed to import recipe:', error);
+    // Some environments stringify Errors to {} in console, so log message+stack explicitly.
+    if (error instanceof Error) {
+      console.error('Failed to import recipe:', { message: error.message, stack: error.stack });
+    } else {
+      console.error('Failed to import recipe:', error);
+    }
     throw error;
   }
 }

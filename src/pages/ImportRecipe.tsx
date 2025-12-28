@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRecipeStore } from '../state/session';
+import { db } from '../db';
+import { IosNavBar } from '../components/IosNavBar';
+import { normalizeRecipeUrl } from '../utils/url';
 
 export default function ImportRecipe() {
   const [url, setUrl] = useState('');
@@ -12,63 +15,50 @@ export default function ImportRecipe() {
 
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!url.trim()) {
-      toast.error('Please enter a URL');
+
+    let normalizedUrl: string;
+    try {
+      normalizedUrl = normalizeRecipeUrl(url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(message || 'Please enter a valid URL');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/import', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          url: url.trim(),
-          saveToServer: true 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.recipe) {
-        await addRecipe(data.recipe);
-        toast.success('Recipe imported and saved to server!');
-        navigate(`/recipe/${data.recipe.id}`);
-      } else {
-        toast.error(data.error || 'Failed to import recipe');
-      }
+      const recipe = await db.importRecipe(normalizedUrl);
+      await addRecipe(recipe);
+      toast.success('Recipe imported!');
+      navigate(`/recipe/${recipe.id}`);
     } catch (error) {
-      console.error('Import error:', error);
-      toast.error('Failed to import recipe. Please try again.');
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Import error:', error instanceof Error ? { message: error.message, stack: error.stack } : error);
+      toast.error(message || 'Failed to import recipe. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-oatmeal">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="text-gray-600 hover:text-gray-900"
-              aria-label="Back"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <h1 className="text-xl font-semibold text-gray-900">Import Recipe</h1>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen ios-page">
+      <IosNavBar
+        title="Import"
+        left={
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1 text-blueberry font-medium"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-[17px]">Back</span>
+          </button>
+        }
+      />
 
-      <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg p-6 shadow-sm">
+      <div className="max-w-md md:max-w-3xl lg:max-w-5xl mx-auto px-4 py-5">
+        <div className="ios-card p-5">
           <div className="flex items-center space-x-2 mb-4">
             <Link2 className="h-5 w-5 text-blueberry" />
             <h2 className="text-lg font-semibold text-gray-900">Recipe URL</h2>
@@ -81,19 +71,22 @@ export default function ImportRecipe() {
               </label>
               <input
                 id="url"
-                type="url"
+                type="text"
+                inputMode="url"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 placeholder="https://example.com/recipe"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blueberry focus:border-transparent"
-                required
+                className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blueberry/20 focus:border-blueberry/30 bg-white/80 text-[17px]"
               />
             </div>
             
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blueberry text-white py-3 rounded-lg hover:bg-blueberry/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-blueberry text-white py-3 rounded-xl hover:bg-blueberry/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[17px] font-semibold"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -106,8 +99,8 @@ export default function ImportRecipe() {
             </button>
           </form>
           
-          <div className="mt-6 p-4 bg-sage/10 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">Supported sites:</h3>
+          <div className="mt-6 p-4 bg-gray-100/70 rounded-2xl border border-black/5">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Supported sites</h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• Any site with JSON-LD recipe markup</li>
               <li>• Popular cooking sites (AllRecipes, Food Network, etc.)</li>
