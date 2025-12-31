@@ -66,7 +66,7 @@ self.addEventListener('push', (event) => {
     tag: data.tag,
     icon,
     badge,
-    // iOS may ignore these, but they help on other platforms.
+    // Some platforms may ignore these, but they help where supported.
     requireInteraction: true,
     vibrate: [200, 100, 200],
     data: {

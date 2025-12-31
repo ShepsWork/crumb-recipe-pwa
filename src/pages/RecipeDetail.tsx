@@ -1,12 +1,12 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Users, Printer, RotateCcw, Plus, Minus, Trash2, Scale, Camera, Upload, Edit3, Check, X, ExternalLink, Star } from 'lucide-react';
+import { Clock, Users, Printer, RotateCcw, Trash2, Scale, Camera, Upload, Edit3, Check, X, ExternalLink, Star, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRecipeStore, useCookSession, useSettings } from '../state/session';
 import { scaleIngredients, formatFraction, getMultiplierOptions, getIngredientDisplayAmount } from '../utils/scale';
 import { isConvertibleToGrams } from '../utils/conversions';
 import { FloatingStepTimer } from '../components/FloatingStepTimer';
-import { IosNavBar } from '../components/IosNavBar';
+import { RvHeader } from '../components/RvHeader';
 import type { Recipe } from '../types';
 
 export default function RecipeDetail() {
@@ -70,7 +70,7 @@ export default function RecipeDetail() {
         setRecipe(foundRecipe);
         loadSession(id);
       } else {
-        navigate('/');
+        navigate('/library');
       }
     }
   }, [id, recipes, navigate, loadSession]);
@@ -170,6 +170,25 @@ export default function RecipeDetail() {
     window.print();
   };
 
+  const handleShare = async () => {
+    if (!recipe) return;
+    const shareData: ShareData = {
+      title: recipe.title,
+      text: `Check out this recipe: ${recipe.title}`,
+      url: recipe.sourceUrl || window.location.href
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url || '');
+        toast.success('Link copied to clipboard');
+      }
+    } catch (err) {
+      toast.error('Unable to share');
+    }
+  };
+
   const handleDelete = async () => {
     if (!recipe || !id) return;
     
@@ -177,7 +196,7 @@ export default function RecipeDetail() {
       try {
         await deleteRecipe(id);
         toast.success('Recipe deleted successfully');
-        navigate('/');
+        navigate('/library');
       } catch (error) {
         toast.error('Failed to delete recipe');
       }
@@ -302,29 +321,20 @@ export default function RecipeDetail() {
   };
 
   return (
-    <div className="min-h-screen ios-page">
-      <IosNavBar
-        className="no-print"
+    <div className="min-h-screen bg-rvPageBg">
+      <RvHeader
         title={recipe?.title || 'Recipe'}
-        left={
-          <button
-            onClick={() => navigate('/')}
-            className="inline-flex items-center gap-1 text-blueberry font-medium"
-            aria-label="Back to library"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="text-[17px]">Library</span>
-          </button>
-        }
-        right={
+        showBackArrow
+        onBack={() => navigate('/library')}
+        rightSlot={
           recipe ? (
-            <div className="flex items-center gap-1 -mr-2">
+            <div className="flex items-center gap-1">
               <button
                 onClick={handleToggleFavorite}
                 className={
                   recipe.isFavorite
-                    ? 'text-yellow-500 hover:text-yellow-600 p-2'
-                    : 'text-gray-500 hover:text-gray-800 p-2'
+                    ? 'text-rvYellow p-2'
+                    : 'text-white/70 hover:text-white p-2'
                 }
                 title={recipe.isFavorite ? 'Unfavorite' : 'Favorite'}
                 aria-label={recipe.isFavorite ? 'Unfavorite recipe' : 'Favorite recipe'}
@@ -333,14 +343,14 @@ export default function RecipeDetail() {
               </button>
               <button
                 onClick={handleDelete}
-                className="text-gray-500 hover:text-red-600 p-2"
+                className="text-white/70 hover:text-red-300 p-2"
                 title="Delete recipe"
                 aria-label="Delete recipe"
               >
                 <Trash2 className="h-5 w-5" />
               </button>
             </div>
-          ) : null
+          ) : undefined
         }
       />
 
@@ -363,7 +373,7 @@ export default function RecipeDetail() {
 
       <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 py-5 space-y-5">
         {/* Recipe Info */}
-        <div className="ios-card p-5 recipe-content">
+        <div className="bg-white rounded-xl shadow-rv-card p-5 recipe-content">
           {/* Recipe Image with Upload Option */}
           <div className="relative mb-4">
             {recipe.image ? (
@@ -420,6 +430,23 @@ export default function RecipeDetail() {
           </div>
           
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{recipe.title}</h1>
+
+          {/* Primary actions: Edit & Share */}
+          <div className="flex items-center gap-3 mb-4 no-print">
+            <button
+              onClick={() => navigate(`/recipe/${recipe.id}/edit`)}
+              className="h-12 px-6 rv-cta-gradient rv-cta-shadow text-white font-bold rounded-full hover:opacity-95 transition-opacity"
+            >
+              Edit Recipe
+            </button>
+            <button
+              onClick={handleShare}
+              className="px-4 py-2 rounded-lg bg-white text-rvGray shadow-rv-card hover:bg-gray-50 inline-flex items-center gap-2"
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </button>
+          </div>
 
           {/* Category */}
           <div className="mb-4 no-print">
@@ -491,7 +518,7 @@ export default function RecipeDetail() {
         </div>
 
         {/* Scale Control */}
-        <div className="ios-card p-4 no-print">
+        <div className="bg-white rounded-xl shadow-rv-card p-4 no-print">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Scale Recipe</h3>
             {hasConvertibleIngredients && (
@@ -512,7 +539,7 @@ export default function RecipeDetail() {
           
           <div className="space-y-3">
             <div
-              className="ios-card p-5 recipe-content md:sticky md:top-6 md:max-h-[calc(100vh-8rem)] md:overflow-auto"
+              className="bg-white rounded-xl shadow-rv-card p-5 recipe-content md:sticky md:top-6 md:max-h-[calc(100vh-8rem)] md:overflow-auto"
               aria-label="Ingredients"
             >
               <select
@@ -671,7 +698,7 @@ export default function RecipeDetail() {
           </section>
 
           {/* Instructions */}
-          <section className="ios-card p-5 recipe-content" aria-label="Instructions">
+          <section className="bg-white rounded-xl shadow-rv-card p-5 recipe-content" aria-label="Instructions">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Instructions</h2>
 
             <div className="space-y-4">
@@ -722,7 +749,6 @@ export default function RecipeDetail() {
 
         <FloatingStepTimer
           recipeTitle={recipe.title}
-          recipeImageUrl={recipe.image}
           stepIndex={currentStepIndex}
           stepText={recipe.steps[currentStepIndex] || ''}
           enabled={!!currentSession}
@@ -731,7 +757,7 @@ export default function RecipeDetail() {
 
         {/* Tips */}
         {recipe.tips && recipe.tips.length > 0 && (
-          <div className="ios-card p-5 recipe-content">
+          <div className="bg-white rounded-xl shadow-rv-card p-5 recipe-content">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Tips</h2>
             <div className="space-y-2">
               {recipe.tips.map((tip, index) => (
@@ -745,7 +771,7 @@ export default function RecipeDetail() {
 
         {/* Nutrition Information */}
         {recipe.nutrition && (
-          <div className="ios-card p-5 recipe-content">
+          <div className="bg-white rounded-xl shadow-rv-card p-5 recipe-content">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Nutrition Facts</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {recipe.nutrition.calories !== undefined && (
@@ -807,7 +833,7 @@ export default function RecipeDetail() {
         )}
 
         {/* Personal Notes */}
-        <div className="ios-card p-5 recipe-content">
+        <div className="bg-white rounded-xl shadow-rv-card p-5 recipe-content">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">My Notes</h2>
             {!isEditingNotes ? (
@@ -861,12 +887,12 @@ export default function RecipeDetail() {
       </div>
 
       {/* Sticky Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 no-print ios-padding">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 no-print safe-bottom">
         <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto flex justify-center space-x-4">
           {!currentSession ? (
             <button
               onClick={handleStartSession}
-              className="flex-1 bg-blueberry text-white py-3 rounded-lg hover:bg-blueberry/90 transition-colors"
+              className="flex-1 h-14 rv-cta-gradient rv-cta-shadow text-white font-bold rounded-full hover:opacity-95 transition-opacity"
             >
               Start Cooking
             </button>
@@ -874,14 +900,14 @@ export default function RecipeDetail() {
             <>
               <button
                 onClick={handleResetSession}
-                className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 bg-gray-100 text-rvGray py-3 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
               >
                 <RotateCcw className="h-5 w-5" />
                 <span>Reset</span>
               </button>
               <button
                 onClick={handlePrint}
-                className="flex-1 bg-sage text-white py-3 rounded-lg hover:bg-sage/90 transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 rv-cta-gradient text-white font-bold py-3 rounded-lg hover:opacity-95 transition-opacity flex items-center justify-center space-x-2"
               >
                 <Printer className="h-5 w-5" />
                 <span>Print</span>

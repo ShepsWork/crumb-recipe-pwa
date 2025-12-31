@@ -60,40 +60,44 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* iOS-ish UI primitives (kept light so the web still looks good) */
-.ios-page {
-  /* iOS grouped background (systemGroupedBackground-ish) */
-  background: rgb(242 242 247);
+
+/* Recipe Vault brand: header gradient (top → bottom) §11.1 */
+.rv-header-gradient {
+  background: linear-gradient(180deg, #FD5E53 0%, #F45A4F 50%, #C7443C 100%);
 }
 
-.ios-card {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  border-radius: 16px;
+/* CTA button gradient (left → right) */
+.rv-cta-gradient {
+  background: linear-gradient(90deg, #FD5E53 0%, #C7443C 100%);
 }
 
-.ios-nav {
-  background: rgba(255, 255, 255, 0.78);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
+/* Hero radial glow behind vault art §13.1 */
+.rv-hero-glow {
+  background: radial-gradient(circle at center, rgba(247,215,116,0.25) 0%, transparent 60%);
 }
 
-.ios-nav-title {
-  letter-spacing: -0.01em;
+/* Thumbnail placeholder gradient when no image §15.3 */
+.rv-thumb-placeholder {
+  background: linear-gradient(180deg, #FD5E53 0%, #F7D774 100%);
 }
 
-.dark .ios-page {
-  background: rgb(0 0 0);
+/* CTA button shadow §16.2 */
+.rv-cta-shadow {
+  box-shadow: 0 10px 24px rgba(0,0,0,0.25);
 }
 
-.dark .ios-card {
-  background: rgba(28, 28, 30, 0.92);
-  border-color: rgba(255, 255, 255, 0.08);
+/* Accessible focus ring defaults */
+button, a, input, select, textarea {
+  outline: none;
 }
 
-.dark .ios-nav {
-  background: rgba(28, 28, 30, 0.72);
-  border-color: rgba(255, 255, 255, 0.08);
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 2px #FD5E53, 0 0 0 4px rgba(0,0,0,0.08);
+  border-radius: 10px;
 }
 
 /* Print styles */
@@ -133,7 +137,7 @@ body {
   }
 }
 
-/* iOS Safari specific */
+/* Safari/WebKit specific */
 @supports (-webkit-touch-callout: none) {
   .safe-top {
     padding-top: env(safe-area-inset-top);
@@ -149,9 +153,5 @@ body {
 
   .safe-right {
     padding-right: env(safe-area-inset-right);
-  }
-
-  .ios-padding {
-    padding-bottom: env(safe-area-inset-bottom);
   }
 }

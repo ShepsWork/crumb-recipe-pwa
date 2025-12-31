@@ -50,11 +50,26 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom colors for kitchen theme
+        // Legacy kitchen theme (kept for backward compatibility)
         oatmeal: '#F2EFEA',
         blueberry: '#7C8FB2',
         dough: '#E9D8A6',
         sage: '#A3B18A',
+
+        // Recipe Vault brand palette (deterministic, do NOT use Tailwind orange/red scales)
+        rvOrange: '#FD5E53',      // Sunset Orange (Primary Actions) - gradient start
+        rvOrangeMid: '#F45A4F',   // Optional gradient mid
+        rvOrangeEnd: '#C7443C',   // Gradient end
+        rvBlue: '#2C3E50',        // Slate Blue (Drawer, App Chrome)
+        rvGray: '#4A4A4A',        // Structural Dark Gray (Text)
+        rvYellow: '#F7D774',      // Soft Yellow (Highlights, active indicator)
+        rvPageBg: '#F6F3EE',      // Warm neutral page background
+        rvCardBg: '#FFFFFF',      // Card surfaces
+        rvInputBg: '#F8F8F8',     // Input field background
+      },
+      boxShadow: {
+        'rv-card': '0 8px 20px rgba(0,0,0,0.18)',
+        'rv-cta': '0 10px 24px rgba(0,0,0,0.25)',
       },
       borderRadius: {
         lg: "var(--radius)",

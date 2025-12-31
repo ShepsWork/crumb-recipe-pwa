@@ -7,16 +7,6 @@ const publicDir = path.join(root, 'public');
 const defaultSrcPngPath = path.join(publicDir, 'icon-source.png');
 const defaultSrcSvgPath = path.join(publicDir, 'icon.svg');
 
-const iosAppIconPath = path.join(
-  root,
-  'ios',
-  'App',
-  'App',
-  'Assets.xcassets',
-  'AppIcon.appiconset',
-  'AppIcon-512@2x.png'
-);
-
 async function ensureExists(p) {
   try {
     await fs.access(p);
@@ -81,16 +71,6 @@ async function run() {
     // eslint-disable-next-line no-console
     console.log(`Generating ${o.file} (${o.size}x${o.size})`);
     await renderPng({ srcPath, outPath, size: o.size });
-  }
-
-  // iOS App Icon (single 1024x1024 file referenced by the asset catalog).
-  if (await fileExists(path.dirname(iosAppIconPath))) {
-    // eslint-disable-next-line no-console
-    console.log('Generating iOS AppIcon (1024x1024)');
-    await renderPng({ srcPath, outPath: iosAppIconPath, size: 1024 });
-  } else {
-    // eslint-disable-next-line no-console
-    console.log('Skipping iOS AppIcon (iOS project not found)');
   }
 
   // eslint-disable-next-line no-console

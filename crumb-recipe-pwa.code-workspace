@@ -6,5 +6,8 @@
 		{
 			"path": "../~Artwork for apps/iOS Apps/CrumbWorks"
 		}
-	]
+	],
+	"settings": {
+		"sweetpad.build.xcodeWorkspacePath": "ios/App/App.xcodeproj/project.xcworkspace"
+	}
 }
