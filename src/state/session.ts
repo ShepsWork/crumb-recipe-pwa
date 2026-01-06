@@ -360,7 +360,17 @@ export const useSettings = create<SettingsStore>()(
       }
     }),
     {
-      name: 'crumb-settings'
+      name: () => {
+        // Profile-scoped settings storage
+        // Import at runtime to avoid circular dependency
+        try {
+          const { getActiveProfileId } = require('../profile/profileManager');
+          const userId = getActiveProfileId();
+          return userId ? `crumbworks:${userId}:settings` : 'crumb-settings';
+        } catch {
+          return 'crumb-settings';
+        }
+      }
     }
   )
 );
