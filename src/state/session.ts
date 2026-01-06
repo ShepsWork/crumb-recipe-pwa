@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { db } from '../db';
 import type { CookSession, Recipe } from '../types';
+import { getActiveProfileId } from '../profile/profileManager';
 
 interface CookSessionStore {
   // Current session state
@@ -360,15 +361,36 @@ export const useSettings = create<SettingsStore>()(
       }
     }),
     {
-      name: () => {
-        // Profile-scoped settings storage
-        // Import at runtime to avoid circular dependency
-        try {
-          const { getActiveProfileId } = require('../profile/profileManager');
-          const userId = getActiveProfileId();
-          return userId ? `crumbworks:${userId}:settings` : 'crumb-settings';
-        } catch {
-          return 'crumb-settings';
+      name: 'crumb-settings-v2',
+      // Custom storage to support profile-scoped keys
+      storage: {
+        getItem: (name: string) => {
+          try {
+            const userId = getActiveProfileId();
+            const key = userId ? `crumbworks:${userId}:settings` : name;
+            const value = localStorage.getItem(key);
+            return value ? JSON.parse(value) : null;
+          } catch {
+            return null;
+          }
+        },
+        setItem: (name: string, value: any) => {
+          try {
+            const userId = getActiveProfileId();
+            const key = userId ? `crumbworks:${userId}:settings` : name;
+            localStorage.setItem(key, JSON.stringify(value));
+          } catch {
+            // Ignore errors
+          }
+        },
+        removeItem: (name: string) => {
+          try {
+            const userId = getActiveProfileId();
+            const key = userId ? `crumbworks:${userId}:settings` : name;
+            localStorage.removeItem(key);
+          } catch {
+            // Ignore errors
+          }
         }
       }
     }
