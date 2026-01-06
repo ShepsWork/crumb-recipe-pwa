@@ -11,14 +11,46 @@ import type { UserId } from '../identity/identity';
 const PROFILE_REGISTRY_KEY = 'crumbworks.profiles.registry';
 const ACTIVE_PROFILE_KEY = 'crumbworks.profiles.active';
 
+let cachedRegistry: ProfileRegistry | null = null;
+let cachedRegistrySerialized: string | null = null;
+
 /**
  * Get the profile registry from localStorage
  */
 function getRegistry(): ProfileRegistry {
   try {
     const stored = localStorage.getItem(PROFILE_REGISTRY_KEY);
+    if (!stored) {
+      cachedRegistry = {
+        profiles: [],
+        activeUserId: null
+      };
+      cachedRegistrySerialized = null;
+      return cachedRegistry;
+    }
+
+    if (cachedRegistry && cachedRegistrySerialized === stored) {
+      return cachedRegistry;
+    }
+
     if (stored) {
       const parsed = JSON.parse(stored) as ProfileRegistry;
+
+      // Reconcile active profile ID so we don't end up with two competing sources of truth.
+      try {
+        const active = localStorage.getItem(ACTIVE_PROFILE_KEY);
+        if (active && parsed.activeUserId !== active) {
+          parsed.activeUserId = active;
+        }
+        if (!active && parsed.activeUserId) {
+          localStorage.setItem(ACTIVE_PROFILE_KEY, parsed.activeUserId);
+        }
+      } catch {
+        // Ignore reconciliation errors; fall back to registry data.
+      }
+
+      cachedRegistry = parsed;
+      cachedRegistrySerialized = JSON.stringify(parsed);
       return parsed;
     }
   } catch (error) {
@@ -37,7 +69,10 @@ function getRegistry(): ProfileRegistry {
  */
 function saveRegistry(registry: ProfileRegistry): void {
   try {
-    localStorage.setItem(PROFILE_REGISTRY_KEY, JSON.stringify(registry));
+    const serialized = JSON.stringify(registry);
+    localStorage.setItem(PROFILE_REGISTRY_KEY, serialized);
+    cachedRegistry = registry;
+    cachedRegistrySerialized = serialized;
   } catch (error) {
     console.error('Failed to save profile registry:', error);
   }
@@ -145,9 +180,11 @@ export function updateProfileLabel(userId: UserId, newLabel: string): void {
  */
 export function deleteProfile(userId: UserId): void {
   const registry = getRegistry();
+
+  const activeId = getActiveProfileId() || registry.activeUserId;
   
   // Don't allow deleting the active profile
-  if (registry.activeUserId === userId) {
+  if (activeId === userId) {
     throw new Error('Cannot delete the active profile. Switch to another profile first.');
   }
   
@@ -178,8 +215,12 @@ export function ensureDefaultProfile(userId: UserId): Profile {
   }
   
   // If no active profile, set the first one
-  if (!registry.activeUserId && registry.profiles.length > 0) {
+  const active = getActiveProfileId();
+  if (!active && registry.profiles.length > 0) {
     setActiveProfile(registry.profiles[0].userId);
+  } else if (active && registry.activeUserId !== active) {
+    registry.activeUserId = active;
+    saveRegistry(registry);
   }
   
   // Return or create profile

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { db } from '../db';
 import type { CookSession, Recipe } from '../types';
 import { getActiveProfileId } from '../profile/profileManager';
@@ -221,7 +221,7 @@ export const useRecipeStore = create<RecipeStore>((set, get) => ({
   deleteRecipe: async (id: string) => {
     try {
       await db.deleteRecipe(id);
-      await db.sessions.delete(id);
+      await db.deleteSession(id);
       const { recipes } = get();
       set({ recipes: recipes.filter(r => r.id !== id) });
     } catch (error) {
@@ -362,23 +362,22 @@ export const useSettings = create<SettingsStore>()(
     }),
     {
       name: 'crumb-settings-v2',
-      // Custom storage to support profile-scoped keys
-      storage: {
+      // Profile-scoped localStorage keys (each profile gets its own persisted settings)
+      storage: createJSONStorage(() => ({
         getItem: (name: string) => {
           try {
             const userId = getActiveProfileId();
-            const key = userId ? `crumbworks:${userId}:settings` : name;
-            const value = localStorage.getItem(key);
-            return value ? JSON.parse(value) : null;
+            const key = userId ? `crumbworks:${userId}:${name}` : name;
+            return localStorage.getItem(key);
           } catch {
             return null;
           }
         },
-        setItem: (name: string, value: any) => {
+        setItem: (name: string, value: string) => {
           try {
             const userId = getActiveProfileId();
-            const key = userId ? `crumbworks:${userId}:settings` : name;
-            localStorage.setItem(key, JSON.stringify(value));
+            const key = userId ? `crumbworks:${userId}:${name}` : name;
+            localStorage.setItem(key, value);
           } catch {
             // Ignore errors
           }
@@ -386,13 +385,13 @@ export const useSettings = create<SettingsStore>()(
         removeItem: (name: string) => {
           try {
             const userId = getActiveProfileId();
-            const key = userId ? `crumbworks:${userId}:settings` : name;
+            const key = userId ? `crumbworks:${userId}:${name}` : name;
             localStorage.removeItem(key);
           } catch {
             // Ignore errors
           }
         }
-      }
+      }))
     }
   )
 );

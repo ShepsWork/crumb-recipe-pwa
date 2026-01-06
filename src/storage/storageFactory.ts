@@ -67,6 +67,11 @@ export async function listProfileDatabases(): Promise<string[]> {
   }
   
   try {
+    if (typeof indexedDB.databases !== 'function') {
+      // Safari/WebKit: indexedDB.databases() is not reliably available.
+      return [];
+    }
+
     const databases = await indexedDB.databases();
     return databases
       .map(db => db.name)
@@ -89,12 +94,82 @@ export async function hasLegacyDatabase(): Promise<boolean> {
   }
   
   try {
-    const databases = await indexedDB.databases();
-    return databases.some(db => db.name === 'CrumbDB');
+    if (typeof indexedDB.databases === 'function') {
+      const databases = await indexedDB.databases();
+      return databases.some(db => db.name === 'CrumbDB');
+    }
+
+    // Fallback for Safari/WebKit: probe existence without relying on indexedDB.databases().
+    return await probeIndexedDbExists('CrumbDB');
   } catch (error) {
     console.warn('Failed to check for legacy database:', error);
     return false;
   }
+}
+
+async function probeIndexedDbExists(name: string): Promise<boolean> {
+  return await new Promise<boolean>((resolve) => {
+    let didUpgrade = false;
+    let request: IDBOpenDBRequest | null = null;
+
+    try {
+      request = indexedDB.open(name);
+    } catch {
+      resolve(false);
+      return;
+    }
+
+    request.onupgradeneeded = () => {
+      // If onupgradeneeded fires with oldVersion=0, the DB didn't exist.
+      // Abort to avoid creating a new DB just for detection.
+      didUpgrade = true;
+      try {
+        request?.transaction?.abort();
+      } catch {
+        // ignore
+      }
+    };
+
+    request.onsuccess = () => {
+      try {
+        request?.result?.close();
+      } catch {
+        // ignore
+      }
+
+      // If we accidentally created something (implementation-dependent), clean it up.
+      if (didUpgrade) {
+        try {
+          indexedDB.deleteDatabase(name);
+        } catch {
+          // ignore
+        }
+        resolve(false);
+        return;
+      }
+
+      resolve(true);
+    };
+
+    request.onerror = () => {
+      // If we aborted an upgrade transaction, treat as "did not exist".
+      if (didUpgrade) {
+        try {
+          indexedDB.deleteDatabase(name);
+        } catch {
+          // ignore
+        }
+        resolve(false);
+        return;
+      }
+
+      resolve(false);
+    };
+
+    request.onblocked = () => {
+      resolve(false);
+    };
+  });
 }
 
 /**

@@ -1,11 +1,10 @@
 import { useState, useRef } from 'react';
-import { Download, Upload, Trash2, User, UserPlus, RefreshCw } from 'lucide-react';
+import { Download, Upload, Trash2, User, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSettings, useRecipeStore } from '../state/session';
 import { getDb } from '../db';
 import { RvLayout } from '../components/RvLayout';
-import { listProfiles, getActiveProfile, createProfile, setActiveProfile, updateProfileLabel, deleteProfile } from '../profile/profileManager';
-import { resolveCurrentUserId } from '../identity/identity';
+import { listProfiles, getActiveProfile, createProfile, setActiveProfile, deleteProfile } from '../profile/profileManager';
 import { reinitializeForProfile } from '../initDatabase';
 import { exportSnapshot, importSnapshot, downloadSnapshot, parseSnapshotFile } from '../sharing/snapshot';
 import type { Profile } from '../types';
@@ -59,8 +58,10 @@ export default function Settings() {
 
     setIsCreatingProfile(true);
     try {
-      const userId = await resolveCurrentUserId();
-      const newId = `local:${crypto.randomUUID()}`;
+      const uuid = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 15)}`;
+      const newId = `local:${uuid}`;
       createProfile(newId, newProfileLabel.trim());
       refreshProfiles();
       setNewProfileLabel('');
