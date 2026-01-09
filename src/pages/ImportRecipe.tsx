@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRecipeStore } from '../state/session';
@@ -8,6 +8,7 @@ import { RvLayout } from '../components/RvLayout';
 import { normalizeRecipeUrl } from '../utils/url';
 
 export default function ImportRecipe() {
+  const [searchParams] = useSearchParams();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -40,6 +41,18 @@ export default function ImportRecipe() {
       setIsLoading(false);
     }
   };
+
+  // Handle URL from Web Share Target
+  useEffect(() => {
+    const sharedUrl = searchParams.get('url');
+    if (sharedUrl) {
+      setUrl(sharedUrl);
+      // Clear the URL parameter to avoid re-importing on page refresh
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('url');
+      navigate(`/import?${newSearchParams.toString()}`, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   return (
     <RvLayout title="Import">
