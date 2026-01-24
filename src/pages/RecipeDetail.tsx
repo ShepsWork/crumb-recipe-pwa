@@ -394,6 +394,7 @@ export default function RecipeDetail() {
                     checked={enableWakeLock}
                     onChange={(e) => setEnableWakeLock(e.target.checked)}
                     className="w-4 h-4 accent-white rounded focus:ring-2 focus:ring-white/50"
+                    aria-label="Toggle keep screen awake during cooking session"
                   />
                 </label>
               )}
