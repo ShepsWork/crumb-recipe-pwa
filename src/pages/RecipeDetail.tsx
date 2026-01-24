@@ -351,7 +351,7 @@ export default function RecipeDetail() {
       title={recipe?.title || 'Recipe'}
       rightSlot={
         recipe ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 pr-2">
             <button
               onClick={handleToggleFavorite}
               className={
