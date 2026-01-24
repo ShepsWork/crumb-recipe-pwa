@@ -7,6 +7,7 @@ import { scaleIngredients, formatFraction, getMultiplierOptions, getIngredientDi
 import { isConvertibleToGrams } from '../utils/conversions';
 import { FloatingStepTimer } from '../components/FloatingStepTimer';
 import { RvLayout } from '../components/RvLayout';
+import { useWakeLock } from '../utils/useWakeLock';
 import type { Recipe } from '../types';
 
 export default function RecipeDetail() {
@@ -35,6 +36,9 @@ export default function RecipeDetail() {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesText, setNotesText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep screen awake when in cook mode
+  const wakeLock = useWakeLock(!!currentSession);
 
   const availableCategories = useMemo(() => {
     const defaults = ['Breakfast', 'Dinner', 'Desserts', 'Drinks'];
@@ -89,6 +93,20 @@ export default function RecipeDetail() {
       setNotesText(recipe.notes || '');
     }
   }, [recipe]);
+
+  // Show notification when wake lock is first activated for a session
+  const hasShownWakeLockToast = useRef(false);
+  useEffect(() => {
+    if (wakeLock.isActive && currentSession && !hasShownWakeLockToast.current) {
+      toast.success('Screen will stay awake during cooking', { duration: 3000 });
+      hasShownWakeLockToast.current = true;
+    }
+    
+    // Reset when session ends
+    if (!currentSession) {
+      hasShownWakeLockToast.current = false;
+    }
+  }, [wakeLock.isActive, currentSession]);
 
   if (!recipe) {
     return (
@@ -362,9 +380,16 @@ export default function RecipeDetail() {
       {currentSession && timeRemaining > 0 && (
         <div className="bg-rvBlue text-white p-3 no-print">
           <div className="max-w-[1200px] mx-auto px-4 flex items-center justify-between">
-            <span className="text-sm">
-              Session expires in {hoursRemaining}h {minutesRemaining}m
-            </span>
+            <div className="flex items-center gap-3 text-sm">
+              <span>
+                Session expires in {hoursRemaining}h {minutesRemaining}m
+              </span>
+              {wakeLock.isActive && (
+                <span className="inline-flex items-center gap-1 bg-white/20 px-2 py-1 rounded text-xs">
+                  ☀️ Screen awake
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={handleFinishedCooking}
