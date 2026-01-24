@@ -275,6 +275,9 @@ interface SettingsStore {
   /** Prefer showing gram conversions when available. */
   preferGrams: boolean;
 
+  /** Enable wake lock to keep screen awake during cooking sessions. */
+  enableWakeLock: boolean;
+
   /** Optional shared key to scope server-side sync across devices. */
   syncKey: string;
 
@@ -300,6 +303,7 @@ interface SettingsStore {
   setKeepSessionsOnClose: (keep: boolean) => void;
   setAutoExtendSessions: (auto: boolean) => void;
   setPreferGrams: (prefer: boolean) => void;
+  setEnableWakeLock: (enable: boolean) => void;
   setSyncKey: (key: string) => void;
   setApiBaseUrl: (url: string) => void;
   upsertConversionOverride: (ingredientKey: string, unit: string, gramsPerUnit: number) => void;
@@ -318,6 +322,9 @@ export const useSettings = create<SettingsStore>()(
       // Zustand will fall back to this default.
       preferGrams: true,
 
+      // Default to enabled: keep screen awake during cooking sessions
+      enableWakeLock: true,
+
       syncKey: '',
       apiBaseUrl: '',
       conversionOverrides: {},
@@ -326,6 +333,7 @@ export const useSettings = create<SettingsStore>()(
       setKeepSessionsOnClose: (keepSessionsOnClose) => set({ keepSessionsOnClose }),
       setAutoExtendSessions: (autoExtendSessions) => set({ autoExtendSessions }),
       setPreferGrams: (preferGrams) => set({ preferGrams }),
+      setEnableWakeLock: (enableWakeLock) => set({ enableWakeLock }),
       setSyncKey: (syncKey) => set({ syncKey: (syncKey || '').trim() }),
       setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl: (apiBaseUrl || '').trim() }),
       upsertConversionOverride: (ingredientKey, unit, gramsPerUnit) => {
