@@ -9,6 +9,7 @@ A mobile-first Progressive Web App for managing and cooking from recipes offline
 - 📱 **Mobile-first PWA** - Optimized for iPhone Safari with proper PWA support
 - 🔄 **Recipe scaling** - Scale ingredients with clean fraction display (½×, 1.5×, 2×, etc.)
 - ✅ **Cook mode** - Check off ingredients and steps with temporary session persistence (72h TTL)
+- ☀️ **Keep awake** - Screen stays awake during cook mode to keep recipes visible while cooking
 - 📴 **Offline-first** - Works completely offline once recipes are imported
 - 🎨 **Kitchen-themed design** - Warm, cozy color palette with excellent readability
 - 🖨️ **Print-friendly** - Clean printouts without UI clutter

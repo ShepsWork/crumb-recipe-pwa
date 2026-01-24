@@ -32,6 +32,7 @@ export function useWakeLock(enabled: boolean) {
     }
 
     let mounted = true;
+    const enabledRef: { current: boolean } = { current: enabled };
 
     const requestWakeLock = async () => {
       try {
@@ -70,7 +71,7 @@ export function useWakeLock(enabled: boolean) {
 
     // Re-request wake lock when document becomes visible again
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && enabled && !wakeLockRef.current) {
+      if (document.visibilityState === 'visible' && enabledRef.current && !wakeLockRef.current) {
         requestWakeLock();
       }
     };
@@ -80,6 +81,7 @@ export function useWakeLock(enabled: boolean) {
     // Cleanup
     return () => {
       mounted = false;
+      enabledRef.current = false;
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       
       if (wakeLockRef.current) {

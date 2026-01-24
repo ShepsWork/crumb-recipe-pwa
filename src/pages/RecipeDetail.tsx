@@ -94,10 +94,17 @@ export default function RecipeDetail() {
     }
   }, [recipe]);
 
-  // Show notification when wake lock is activated
+  // Show notification when wake lock is first activated for a session
+  const hasShownWakeLockToast = useRef(false);
   useEffect(() => {
-    if (wakeLock.isActive && currentSession) {
+    if (wakeLock.isActive && currentSession && !hasShownWakeLockToast.current) {
       toast.success('Screen will stay awake during cooking', { duration: 3000 });
+      hasShownWakeLockToast.current = true;
+    }
+    
+    // Reset when session ends
+    if (!currentSession) {
+      hasShownWakeLockToast.current = false;
     }
   }, [wakeLock.isActive, currentSession]);
 
