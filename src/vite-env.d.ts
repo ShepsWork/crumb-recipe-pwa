@@ -10,3 +10,16 @@ declare module 'virtual:pwa-register' {
 
   export function registerSW(options?: RegisterSWOptions): (reloadPage?: boolean) => Promise<void>;
 }
+
+// Screen Wake Lock API types
+interface WakeLockSentinel extends EventTarget {
+  readonly released: boolean;
+  readonly type: 'screen';
+  release(): Promise<void>;
+}
+
+interface Navigator {
+  wakeLock?: {
+    request(type: 'screen'): Promise<WakeLockSentinel>;
+  };
+}
