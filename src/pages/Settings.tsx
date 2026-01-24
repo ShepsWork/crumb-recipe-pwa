@@ -22,6 +22,8 @@ export default function Settings() {
     setApiBaseUrl,
     preferGrams,
     setPreferGrams,
+    enableWakeLock,
+    setEnableWakeLock,
     conversionOverrides,
     upsertConversionOverride,
     removeConversionOverride
@@ -529,6 +531,19 @@ export default function Settings() {
           <h2 className="text-lg font-semibold text-rvGray mb-4">Cooking Sessions</h2>
           
           <div className="space-y-4">
+            <label className="flex items-center justify-between">
+              <div>
+                <span className="text-rvGray">Keep screen awake during cooking</span>
+                <p className="text-sm text-gray-500">Prevent screen from sleeping while a cooking session is active</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={enableWakeLock}
+                onChange={(e) => setEnableWakeLock(e.target.checked)}
+                className="w-5 h-5 accent-rvAccent rounded focus:ring-rvAccent"
+              />
+            </label>
+
             <label className="flex items-center justify-between">
               <div>
                 <span className="text-rvGray">Keep sessions when closing app</span>

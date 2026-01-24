@@ -14,7 +14,7 @@ export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { recipes, deleteRecipe, updateRecipe } = useRecipeStore();
-  const { preferGrams, setPreferGrams } = useSettings();
+  const { preferGrams, setPreferGrams, enableWakeLock } = useSettings();
   const { 
     currentSession, 
     loadSession, 
@@ -37,8 +37,8 @@ export default function RecipeDetail() {
   const [notesText, setNotesText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Keep screen awake when in cook mode
-  const wakeLock = useWakeLock(!!currentSession);
+  // Keep screen awake when in cook mode (if enabled in settings)
+  const wakeLock = useWakeLock(!!currentSession && enableWakeLock);
 
   const availableCategories = useMemo(() => {
     const defaults = ['Breakfast', 'Dinner', 'Desserts', 'Drinks'];
