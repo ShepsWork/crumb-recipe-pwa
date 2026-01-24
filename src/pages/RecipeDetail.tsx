@@ -14,7 +14,7 @@ export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { recipes, deleteRecipe, updateRecipe } = useRecipeStore();
-  const { preferGrams, setPreferGrams, enableWakeLock } = useSettings();
+  const { preferGrams, setPreferGrams, enableWakeLock, setEnableWakeLock } = useSettings();
   const { 
     currentSession, 
     loadSession, 
@@ -384,10 +384,18 @@ export default function RecipeDetail() {
               <span>
                 Session expires in {hoursRemaining}h {minutesRemaining}m
               </span>
-              {wakeLock.isActive && (
-                <span className="inline-flex items-center gap-1 bg-white/20 px-2 py-1 rounded text-xs">
-                  ☀️ Screen awake
-                </span>
+              {wakeLock.isSupported && (
+                <label className="inline-flex items-center gap-2 bg-white/20 px-2 py-1 rounded text-xs cursor-pointer hover:bg-white/30 transition-colors">
+                  <span className="inline-flex items-center gap-1">
+                    ☀️ Screen awake
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={enableWakeLock}
+                    onChange={(e) => setEnableWakeLock(e.target.checked)}
+                    className="w-4 h-4 accent-white rounded focus:ring-2 focus:ring-white/50"
+                  />
+                </label>
               )}
             </div>
             <button
