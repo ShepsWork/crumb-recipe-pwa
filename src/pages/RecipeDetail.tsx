@@ -578,7 +578,7 @@ export default function RecipeDetail() {
           
           <div className="space-y-3">
             <div
-              className="bg-white rounded-xl shadow-rv-card p-5 recipe-content md:sticky md:top-6 md:max-h-[calc(100vh-8rem)] md:overflow-auto"
+              className="bg-white rounded-xl shadow-rv-card p-5 recipe-content md:sticky md:top-[calc(88px+env(safe-area-inset-top))] md:max-h-[calc(100vh-8rem)] md:overflow-auto"
               aria-label="Ingredients"
             >
               <select
@@ -642,7 +642,7 @@ export default function RecipeDetail() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {/* Ingredients */}
           <section
-            className="bg-white rounded-lg p-6 shadow-sm recipe-content md:sticky md:top-6 md:max-h-[calc(100vh-8rem)] md:overflow-auto"
+            className="bg-white rounded-lg p-6 shadow-sm recipe-content md:sticky md:top-[calc(88px+env(safe-area-inset-top))] md:max-h-[calc(100vh-8rem)] md:overflow-auto"
             aria-label="Ingredients"
           >
             <div className="flex items-center justify-between mb-4">
