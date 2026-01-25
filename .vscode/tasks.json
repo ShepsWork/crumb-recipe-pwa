@@ -128,14 +128,22 @@
     {
       "label": "Dev: Backend (Express)",
       "type": "shell",
-      "command": "set -euo pipefail; PORT=3000 npm run server",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "set -euo pipefail; source $HOME/.nvm/nvm.sh 2>/dev/null || source $HOME/.profile 2>/dev/null || source $HOME/.bashrc 2>/dev/null || source $HOME/.zshrc 2>/dev/null || true; PORT=3000 npm run server"
+      ],
       "isBackground": true,
       "problemMatcher": []
     },
     {
       "label": "Dev: Frontend (Vite)",
       "type": "shell",
-      "command": "npm run dev",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "source $HOME/.nvm/nvm.sh 2>/dev/null || source $HOME/.profile 2>/dev/null || source $HOME/.bashrc 2>/dev/null || source $HOME/.zshrc 2>/dev/null || true; npm run dev"
+      ],
       "isBackground": true,
       "problemMatcher": []
     },
@@ -166,14 +174,22 @@
     {
       "label": "Dev: Start Backend (hot reload)",
       "type": "shell",
-      "command": "set -euo pipefail; PORT=3000 npm run server:dev",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "set -euo pipefail; source $HOME/.nvm/nvm.sh 2>/dev/null || source $HOME/.profile 2>/dev/null || source $HOME/.bashrc 2>/dev/null || source $HOME/.zshrc 2>/dev/null || true; PORT=3000 npm run server:dev"
+      ],
       "isBackground": true,
       "problemMatcher": []
     },
     {
       "label": "Dev: Start Frontend (Vite)",
       "type": "shell",
-      "command": "set -euo pipefail; npm run dev",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "set -euo pipefail; source $HOME/.nvm/nvm.sh 2>/dev/null || source $HOME/.profile 2>/dev/null || source $HOME/.bashrc 2>/dev/null || source $HOME/.zshrc 2>/dev/null || true; npm run dev"
+      ],
       "isBackground": true,
       "problemMatcher": []
     },
