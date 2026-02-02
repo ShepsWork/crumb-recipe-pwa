@@ -1,4 +1,4 @@
-# PR Fix (Implementation) — PR #21 — audio-session-gating
+# PR Fix (Implementation) — PR #21 — audio-session-gating 
 
 You are implementing fixes for a pull request **in this repository**.
 
